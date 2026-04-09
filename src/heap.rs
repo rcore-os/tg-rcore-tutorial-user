@@ -61,7 +61,8 @@ unsafe impl GlobalAlloc for Global {
     #[inline]
     unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
         // 分配失败直接走 Rust 统一错误处理（通常会 panic）。
-        if let Ok((ptr, _)) = heap_mut().allocate_layout::<u8>(layout) {
+        // 使用 allocate 而不是 allocate_layout 以避免触发 customizable_buddy 的实现 bug
+        if let Ok((ptr, _)) = heap_mut().allocate::<u8>(layout.align(), NonZero::new(layout.size()).unwrap()) {
             ptr.as_ptr()
         } else {
             handle_alloc_error(layout)
